@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DocuMind AI | RAG Assistant</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, #312e81, transparent 35%),
+                radial-gradient(circle at bottom right, #0f766e, transparent 35%),
+                #020617;
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Main App */
+
+        .app {
+            width: 100%;
+            max-width: 1050px;
+            height: 90vh;
+            min-height: 650px;
+
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(20px);
+
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px;
+
+            box-shadow:
+                0 25px 70px rgba(0,0,0,0.5);
+
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+
+        .header {
+            padding: 20px 25px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+
+            background: rgba(255,255,255,0.03);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+
+            border-radius: 15px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 25px;
+
+            background: linear-gradient(
+                135deg,
+                #6366f1,
+                #06b6d4
+            );
+
+            box-shadow: 0 8px 25px rgba(99,102,241,0.35);
+        }
+
+        .brand h1 {
+            font-size: 21px;
+        }
+
+        .brand p {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+
+            border: 1px solid rgba(255,255,255,0.1);
+
+            background: rgba(255,255,255,0.05);
+
+            color: white;
+
+            border-radius: 12px;
+
+            cursor: pointer;
+
+            font-size: 17px;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* Status */
+
+        .status {
+            padding: 10px 25px;
+
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 12px;
+
+            color: #cbd5e1;
+
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .online {
+            width: 8px;
+            height: 8px;
+
+            background: #22c55e;
+
+            border-radius: 50%;
+
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        /* Chat */
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+
+            padding: 30px;
+        }
+
+        .welcome {
+            text-align: center;
+
+            max-width: 650px;
+
+            margin: 25px auto 35px;
+        }
+
+        .welcome-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .welcome h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Suggestions */
+
+        .suggestions {
+            display: grid;
+
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 12px;
+
+            max-width: 750px;
+
+            margin: 0 auto 30px;
+        }
+
+        .suggestion {
+            padding: 15px;
+
+            text-align: left;
+
+            border-radius: 14px;
+
+            border: 1px solid rgba(255,255,255,0.09);
+
+            background: rgba(255,255,255,0.04);
+
+            color: #e2e8f0;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .suggestion:hover {
+            transform: translateY(-2px);
+
+            background: rgba(99,102,241,0.18);
+
+            border-color: rgba(129,140,248,0.5);
+        }
+
+        .suggestion span {
+            display: block;
+
+            font-size: 11px;
+
+            color: #818cf8;
+
+            margin-bottom: 6px;
+        }
+
+        .suggestion p {
+            font-size: 13px;
+        }
+
+        /* Messages */
+
+        .message-row {
+            display: flex;
+            gap: 12px;
+
+            margin: 20px 0;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+
+            flex-shrink: 0;
+
+            border-radius: 12px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: linear-gradient(
+                135deg,
+                #6366f1,
+                #06b6d4
+            );
+        }
+
+        .message {
+            max-width: 75%;
+
+            padding: 14px 17px;
+
+            border-radius: 17px;
+
+            line-height: 1.6;
+
+            font-size: 14px;
+
+            white-space: pre-wrap;
+        }
+
+        .bot-message {
+            background: rgba(255,255,255,0.07);
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            border-top-left-radius: 5px;
+        }
+
+        .user-message {
+            background: linear-gradient(
+                135deg,
+                #4f46e5,
+                #6366f1
+            );
+
+            border-top-right-radius: 5px;
+        }
+
+        /* Typing */
+
+        .typing {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .typing span {
+            width: 7px;
+            height: 7px;
+
+            background: #94a3b8;
+
+            border-radius: 50%;
+
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: .15s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: .3s;
+        }
+
+        @keyframes bounce {
+
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+            }
+
+        }
+
+        /* Input Area */
+
+        .input-section {
+            padding: 18px 22px 22px;
+
+            border-top: 1px solid rgba(255,255,255,0.08);
+
+            background: rgba(2,6,23,0.5);
+        }
+
+        .input-box {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            padding: 8px 8px 8px 17px;
+
+            background: rgba(255,255,255,0.06);
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            border-radius: 17px;
+
+            transition: 0.2s;
+        }
+
+        .input-box:focus-within {
+            border-color: #6366f1;
+
+            box-shadow:
+                0 0 0 3px rgba(99,102,241,0.12);
+        }
+
+        #question {
+            flex: 1;
+
+            background: transparent;
+
+            border: none;
+
+            outline: none;
+
+            color: white;
+
+            font-size: 15px;
+        }
+
+        #question::placeholder {
+            color: #64748b;
+        }
+
+        .send-btn {
+            width: 45px;
+            height: 45px;
+
+            border: none;
+
+            border-radius: 13px;
+
+            background: linear-gradient(
+                135deg,
+                #6366f1,
+                #06b6d4
+            );
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 18px;
+
+            transition: 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .footer {
+            text-align: center;
+
+            margin-top: 10px;
+
+            color: #64748b;
+
+            font-size: 11px;
+        }
+
+
+        /* Mobile */
+
+        @media (max-width: 700px) {
+
+            body {
+                padding: 0;
+            }
+
+            .app {
+                height: 100vh;
+                min-height: 100vh;
+
+                border-radius: 0;
+            }
+
+            .suggestions {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                padding: 18px;
+            }
+
+            .message {
+                max-width: 88%;
+            }
+
+            .welcome h2 {
+                font-size: 23px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <div class="brand">
+
+            <div class="logo">
+                🤖
+            </div>
+
+            <div>
+
+                <h1>DocuMind AI</h1>
+
+                <p>Intelligent RAG Document Assistant</p>
+
+            </div>
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                class="icon-btn"
+                onclick="clearChat()"
+                title="Clear Chat">
+                🗑️
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Status -->
+
+    <div class="status">
+
+        <div class="online"></div>
+
+        <span>
+            AI Online • PDF Knowledge Connected
+        </span>
+
+    </div>
+
+
+    <!-- Chat -->
+
+    <div class="chat-container" id="chatBox">
+
+
+        <!-- Welcome -->
+
+        <div class="welcome" id="welcome">
+
+            <div class="welcome-icon">
+                🧠
+            </div>
+
+            <h2>
+                Ask Your Document
+            </h2>
+
+            <p>
+                I can search the uploaded PDF and answer
+                your questions using Retrieval-Augmented Generation.
+            </p>
+
+        </div>
+
+
+        <!-- Suggestions -->
+
+        <div class="suggestions" id="suggestions">
+
+            <div
+                class="suggestion"
+                onclick="useSuggestion('What is the academic year mentioned in the document?')">
+
+                <span>📅 DOCUMENT</span>
+
+                <p>
+                    What is the academic year?
+                </p>
+
+            </div>
+
+
+            <div
+                class="suggestion"
+                onclick="useSuggestion('Which department is mentioned in the document?')">
+
+                <span>🏛️ DEPARTMENT</span>
+
+                <p>
+                    Which department is mentioned?
+                </p>
+
+            </div>
+
+
+            <div
+                class="suggestion"
+                onclick="useSuggestion('What is the programme mentioned in the document?')">
+
+                <span>📚 PROGRAMME</span>
+
+                <p>
+                    What is the programme?
+                </p>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- Input -->
+
+    <div class="input-section">
+
+        <div class="input-box">
+
+            <input
+                type="text"
+                id="question"
+                placeholder="Ask anything about your PDF..."
+                autocomplete="off"
+            >
+
+
+            <button
+                class="send-btn"
+                id="sendBtn"
+                onclick="sendQuestion()">
+
+                ➤
+
+            </button>
+
+        </div>
+
+
+        <div class="footer">
+
+            Powered by Gemini • ChromaDB • LangChain • RAG
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+const input =
+    document.getElementById("question");
+
+const chatBox =
+    document.getElementById("chatBox");
+
+const sendBtn =
+    document.getElementById("sendBtn");
+
+
+/* Enter key */
+
+input.addEventListener(
+    "keypress",
+    function(event) {
+
+        if (event.key === "Enter") {
+
+            sendQuestion();
+
+        }
+
+    }
+);
+
+
+/* Suggestion */
+
+function useSuggestion(question) {
+
+    input.value = question;
+
+    sendQuestion();
+
+}
+
+
+/* Add message */
+
+function addMessage(text, type) {
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "message-row " + type;
+
+
+    const avatar =
+        document.createElement("div");
+
+    avatar.className =
+        "avatar";
+
+    avatar.innerText =
+        type === "user" ? "👤" : "🤖";
+
+
+    const message =
+        document.createElement("div");
+
+    message.className =
+        "message " +
+        (type === "user"
+            ? "user-message"
+            : "bot-message");
+
+
+    message.innerText = text;
+
+
+    if (type === "user") {
+
+        row.appendChild(message);
+
+        row.appendChild(avatar);
+
+    } else {
+
+        row.appendChild(avatar);
+
+        row.appendChild(message);
+
+    }
+
+
+    chatBox.appendChild(row);
+
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+
+    return row;
+
+}
+
+
+/* Typing animation */
+
+function addTyping() {
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "message-row bot";
+
+
+    row.innerHTML = `
+
+        <div class="avatar">
+            🤖
+        </div>
+
+        <div class="message bot-message">
+
+            <div class="typing">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    chatBox.appendChild(row);
+
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+
+    return row;
+
+}
+
+
+/* Send question */
+
+async function sendQuestion() {
+
+    const question =
+        input.value.trim();
+
+
+    if (!question) {
+        return;
+    }
+
+
+    /* Hide welcome */
+
+    const welcome =
+        document.getElementById("welcome");
+
+    const suggestions =
+        document.getElementById("suggestions");
+
+
+    if (welcome) {
+        welcome.style.display = "none";
+    }
+
+    if (suggestions) {
+        suggestions.style.display = "none";
+    }
+
+
+    /* User message */
+
+    addMessage(
+        question,
+        "user"
+    );
+
+
+    input.value = "";
+
+    sendBtn.disabled = true;
+
+
+    /* Typing */
+
+    const typing =
+        addTyping();
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/chat",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        question: question
+                    })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        typing.remove();
+
+
+        addMessage(
+            data.answer ||
+            "No answer received.",
+            "bot"
+        );
+
+
+    }
+
+    catch (error) {
+
+        typing.remove();
+
+
+        addMessage(
+            "❌ Unable to connect to the server. Please check whether Flask is running.",
+            "bot"
+        );
+
+    }
+
+
+    sendBtn.disabled = false;
+
+    input.focus();
+
+}
+
+
+/* Clear chat */
+
+function clearChat() {
+
+    chatBox.innerHTML = `
+
+        <div class="welcome" id="welcome">
+
+            <div class="welcome-icon">
+                🧠
+            </div>
+
+            <h2>
+                Ask Your Document
+            </h2>
+
+            <p>
+                I can search the uploaded PDF and answer
+                your questions using Retrieval-Augmented Generation.
+            </p>
+
+        </div>
+
+
+        <div class="suggestions" id="suggestions">
+
+            <div
+                class="suggestion"
+                onclick="useSuggestion('What is the academic year mentioned in the document?')">
+
+                <span>📅 DOCUMENT</span>
+
+                <p>What is the academic year?</p>
+
+            </div>
+
+
+            <div
+                class="suggestion"
+                onclick="useSuggestion('Which department is mentioned in the document?')">
+
+                <span>🏛️ DEPARTMENT</span>
+
+                <p>Which department is mentioned?</p>
+
+            </div>
+
+
+            <div
+                class="suggestion"
+                onclick="useSuggestion('What is the programme mentioned in the document?')">
+
+                <span>📚 PROGRAMME</span>
+
+                <p>What is the programme?</p>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+</script>
+
+</body>
+
+</html>
